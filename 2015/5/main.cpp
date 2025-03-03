@@ -12,7 +12,10 @@ int main() {
 
   std::string line;
   while (std::getline(file, line)) {
-    std::cout << line << std::endl;
+    for (auto c : line) {
+      std::cout << c;
+    }
+    std::cout << "\n";
   }
 
   return 0;
