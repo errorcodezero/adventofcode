@@ -11,5 +11,3 @@ while True:
     str = f"{input}{secret_key}"
     hash = hashlib.md5(f"{input}{secret_key}".encode())
     print(f"{hash.hexdigest()} - {secret_key}")
-
-print(hash.hexdigest())
