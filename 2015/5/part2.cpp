@@ -15,39 +15,28 @@ int main() {
   std::string line;
   int nice = 0;
   while (std::getline(file, line)) {
-    bool naughty = true;
+    bool naughty = false;
 
-    char prev = ' ';
-    char prevprev = ' ';
     bool repeats = false;
-    bool arePairs = false;
-    std::string pairKey = "";
-    std::unordered_map<std::string, int> pairs =
-        std::unordered_map<std::string, int>();
+    bool paired = false;
 
-    int i = 0;
+    auto pairs = std::unordered_map<std::string, int>();
 
     for (int i = 0; i < line.length(); i++) {
-      char c = line[i];
-      if (i >= 1) {
-        prev = line[i - 1];
-        pairKey = "";
-        pairKey += prev;
-        pairKey += c;
-        if (prev != c)
-          pairs[pairKey]++;
-      }
-      if (i >= 2)
-        prevprev = line[i - 1];
-      if (prevprev == c) {
+      std::string pair = line.substr(i, 2);
+      std::string trio = line.substr(i, 3);
+
+      if (trio[0] == trio[2])
         repeats = true;
-      }
-      if (pairs[pairKey] >= 2) {
-        arePairs = true;
+
+      for (int j = i + 2; j < line.length() - 1; j++) {
+        if (line.substr(j, 2) == pair) {
+          paired = true;
+        }
       }
     }
 
-    naughty = arePairs && repeats;
+    naughty = !paired || !repeats;
 
     if (!naughty)
       nice++;
@@ -56,6 +45,5 @@ int main() {
   }
 
   std::cout << "Nice strings: " << nice << "\n";
-
   return 0;
 }
