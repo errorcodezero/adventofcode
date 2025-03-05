@@ -9,12 +9,12 @@ int main() {
 
   file.open("input.txt");
 
-  auto grid = std::vector<std::vector<bool>>();
+  auto grid = std::vector<std::vector<int>>();
 
   for (int i = 0; i < 1000; i++) {
-    grid.push_back(std::vector<bool>());
+    grid.push_back(std::vector<int>());
     for (int j = 0; j < 1000; j++) {
-      grid[i].push_back(false);
+      grid[i].push_back(0);
     }
   }
 
@@ -59,13 +59,14 @@ int main() {
       for (int j = start.back(); j <= end.back(); j++) {
         switch (c) {
         case Commands::OFF:
-          grid.at(i).at(j) = false;
+          if (grid.at(i).at(j) > 0)
+            grid.at(i).at(j)--;
           break;
         case Commands::ON:
-          grid.at(i).at(j) = true;
+          grid.at(i).at(j)++;
           break;
         case Commands::TOGGLE:
-          grid.at(i).at(j) = !grid.at(i).at(j);
+          grid.at(i).at(j) += 2;
           break;
         }
       }
@@ -74,14 +75,14 @@ int main() {
 
   int lights = 0;
 
-  for (std::vector<bool> row : grid) {
-    for (bool light : row) {
+  for (std::vector<int> row : grid) {
+    for (int light : row) {
       if (light)
-        lights++;
+        lights += light;
     }
   }
 
-  std::cout << "Total Lights Lit: " << lights << "\n";
+  std::cout << "Total Brightness: " << lights << "\n";
 
   return 0;
 }
