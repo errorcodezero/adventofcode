@@ -1,6 +1,9 @@
 import hashlib
 
-input = "yzbqklnj"
+f = open("input.txt", "r")
+input = f.readline()
+f.close()
+
 secret_key = 0
 hash = hashlib.md5(f"{input}{secret_key}".encode())
 
