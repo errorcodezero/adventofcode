@@ -1,12 +1,12 @@
 use std::{collections::HashMap, fs::read_to_string};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum NumOrValue<'a> {
     Num(i16),
     Value(&'a str),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Instruction<'a> {
     And {
         opnd0: &'a str,
@@ -24,7 +24,7 @@ enum Instruction<'a> {
     },
     LShift {
         opnd0: &'a str,
-        shift: &'a str,
+        shift: i16,
         ans: &'a str,
     },
     RShift {
@@ -88,6 +88,33 @@ impl<'a> Instruction<'a> {
 
         dependencies
     }
+
+    fn get_declared(&self) -> &'a str {
+        match *self {
+            Instruction::And {
+                opnd0: _,
+                opnd1: _,
+                ans,
+            } => ans,
+            Instruction::Or {
+                opnd0: _,
+                opnd1: _,
+                ans,
+            } => ans,
+            Instruction::Not { opnd0: _, ans } => ans,
+            Instruction::LShift {
+                opnd0: _,
+                shift: _,
+                ans,
+            } => ans,
+            Instruction::RShift {
+                opnd0: _,
+                shift: _,
+                ans,
+            } => ans,
+            Instruction::Assignment { var, value: _ } => var,
+        }
+    }
 }
 
 fn main() {
@@ -100,8 +127,6 @@ fn main() {
         for line in file.lines() {
             let instruction: Instruction;
             let split: Vec<&str> = line.split(" ").collect();
-
-            println!("{}", line);
 
             if line.contains("AND") {
                 // x AND y -> z
@@ -131,7 +156,7 @@ fn main() {
                 // 0 1      2 3  4
                 instruction = Instruction::LShift {
                     opnd0: split[0],
-                    shift: split[2],
+                    shift: split[2].parse().unwrap(),
                     ans: split[4],
                 }
             } else if line.contains("RSHIFT") {
@@ -158,9 +183,29 @@ fn main() {
                 }
             }
 
-            sorted_instructions.push(instruction);
+            let mut index = 0;
+
+            for sorted_instruction in &sorted_instructions {
+                let dependencies = instruction.get_dependencies();
+                let mut declared: Vec<&str> = Vec::new();
+                let curr_declared = sorted_instruction.get_declared();
+
+                index += 1;
+
+                if dependencies.contains(&curr_declared) {
+                    declared.push(curr_declared);
+                }
+                if declared.len() == dependencies.len() {
+                    break;
+                }
+            }
+
+            sorted_instructions.insert(index, instruction);
         }
+        println!("{:#?}", sorted_instructions);
         for instruction in sorted_instructions {
+            println!("{:?}", instruction);
+
             match instruction {
                 Instruction::Assignment { var, value } => match value {
                     NumOrValue::Value(s) => data.insert(var, data[s]),
@@ -173,14 +218,8 @@ fn main() {
                     data.insert(ans, data[opnd0] | data[opnd1])
                 }
                 Instruction::Not { opnd0, ans } => data.insert(ans, !data[opnd0]),
-                Instruction::RShift { opnd0, shift, ans } => data.insert(
-                    ans,
-                    data[opnd0] >> shift.to_string().parse::<i16>().unwrap(),
-                ),
-                Instruction::LShift { opnd0, shift, ans } => data.insert(
-                    ans,
-                    data[opnd0] << shift.to_string().parse::<i16>().unwrap(),
-                ),
+                Instruction::RShift { opnd0, shift, ans } => data.insert(ans, data[opnd0] >> shift),
+                Instruction::LShift { opnd0, shift, ans } => data.insert(ans, data[opnd0] << shift),
             };
         }
 
