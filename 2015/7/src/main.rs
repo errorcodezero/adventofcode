@@ -1,9 +1,10 @@
-use std::{collections::HashMap, fs::read_to_string};
+use std::collections::HashMap;
+use std::fs::read_to_string;
 
 #[derive(Clone, Copy, Debug)]
-enum NumOrValue<'a> {
+enum NumOrVar<'a> {
     Num(i16),
-    Value(&'a str),
+    Var(&'a str),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -33,96 +34,122 @@ enum Instruction<'a> {
         ans: &'a str,
     },
     Assignment {
-        value: NumOrValue<'a>,
+        value: NumOrVar<'a>,
         var: &'a str,
     },
 }
 
-impl<'a> Instruction<'a> {
-    fn get_dependencies(&self) -> Vec<&'a str> {
-        let mut dependencies = Vec::new();
-
-        match *self {
-            Instruction::And {
-                opnd0,
-                opnd1,
-                ans: _,
-            } => {
-                let _ = &dependencies.push(opnd0);
-                let _ = &dependencies.push(opnd1);
-            }
-            Instruction::Or {
-                opnd0,
-                opnd1,
-                ans: _,
-            } => {
-                let _ = &dependencies.push(opnd0);
-                let _ = &dependencies.push(opnd1);
-            }
-            Instruction::Not { opnd0, ans: _ } => {
-                let _ = &dependencies.push(opnd0);
-            }
-            Instruction::LShift {
-                opnd0,
-                shift: _,
-                ans: _,
-            } => {
-                let _ = &dependencies.push(opnd0);
-            }
-            Instruction::RShift {
-                opnd0,
-                shift: _,
-                ans: _,
-            } => {
-                let _ = &dependencies.push(opnd0);
-            }
-            Instruction::Assignment { var: _, value } => match value {
-                NumOrValue::Value(s) => {
-                    let _ = &dependencies.push(s);
+fn evaluate<'a>(
+    search: &str,
+    instructions: &'a [Instruction],
+    cache: &mut HashMap<&'a str, Option<i16>>,
+) -> i16 {
+    let mut ending_value = 0;
+    for instruction in instructions {
+        match instruction {
+            Instruction::Assignment { var, value } => match value {
+                NumOrVar::Var(s) => {
+                    cache.entry(var).or_insert(None);
+                    cache.entry(s).or_insert(None);
+                    if var == &search {
+                        let v1;
+                        if let Some(i) = cache[s] {
+                            v1 = i;
+                        } else {
+                            v1 = evaluate(var, instructions, cache)
+                        }
+                        ending_value = v1
+                    }
                 }
-                NumOrValue::Num(_) => {
-                    let _ = &dependencies;
+                NumOrVar::Num(i) => {
+                    ending_value = *i;
+                    cache.insert(var, Some(*i));
                 }
             },
-        }
+            Instruction::And { opnd0, opnd1, ans } => {
+                if ans == &search {
+                    let v1;
+                    let v2;
+                    if let Some(i) = cache[opnd0] {
+                        v1 = i;
+                    } else {
+                        v1 = evaluate(opnd0, instructions, cache)
+                    }
 
-        dependencies
-    }
+                    if let Some(i) = cache[opnd1] {
+                        v2 = i;
+                    } else {
+                        v2 = evaluate(opnd1, instructions, cache)
+                    }
+                    ending_value = v1 & v2;
+                }
+            }
+            Instruction::Or { opnd0, opnd1, ans } => {
+                if ans == &search {
+                    let v1;
+                    let v2;
+                    if let Some(i) = cache[opnd0] {
+                        v1 = i;
+                    } else {
+                        v1 = evaluate(opnd0, instructions, cache)
+                    }
 
-    fn get_declared(&self) -> &'a str {
-        match *self {
-            Instruction::And {
-                opnd0: _,
-                opnd1: _,
-                ans,
-            } => ans,
-            Instruction::Or {
-                opnd0: _,
-                opnd1: _,
-                ans,
-            } => ans,
-            Instruction::Not { opnd0: _, ans } => ans,
-            Instruction::LShift {
-                opnd0: _,
-                shift: _,
-                ans,
-            } => ans,
-            Instruction::RShift {
-                opnd0: _,
-                shift: _,
-                ans,
-            } => ans,
-            Instruction::Assignment { var, value: _ } => var,
+                    if let Some(i) = cache[opnd1] {
+                        v2 = i;
+                    } else {
+                        v2 = evaluate(opnd1, instructions, cache)
+                    }
+                    ending_value = v1 | v2;
+                }
+            }
+            Instruction::Not { opnd0, ans } => {
+                if ans == &search {
+                    let v1;
+                    if let Some(i) = cache[opnd0] {
+                        v1 = i;
+                    } else {
+                        v1 = evaluate(opnd0, instructions, cache)
+                    }
+
+                    ending_value = !v1;
+                }
+            }
+            Instruction::RShift { opnd0, shift, ans } => {
+                if ans == &search {
+                    let v1;
+                    if let Some(i) = cache[opnd0] {
+                        v1 = i;
+                    } else {
+                        v1 = evaluate(opnd0, instructions, cache)
+                    }
+
+                    ending_value = v1 >> shift;
+                }
+            }
+            Instruction::LShift { opnd0, shift, ans } => {
+                if ans == &search {
+                    let v1;
+                    if let Some(i) = cache[opnd0] {
+                        v1 = i;
+                    } else {
+                        v1 = evaluate(opnd0, instructions, cache)
+                    }
+
+                    ending_value = v1 << shift;
+                }
+            }
         }
     }
+    println!("{}", ending_value);
+    ending_value
 }
 
 fn main() {
     let file = read_to_string("input.txt");
+    let mut cache: Box<HashMap<&str, Option<i16>>> = Box::default();
 
     if let Ok(file) = file {
-        let mut data: HashMap<&str, i16> = HashMap::new();
-        let mut sorted_instructions: Vec<Instruction> = Vec::new();
+        let mut instructions: Box<Vec<Instruction>> = Box::default();
 
         for line in file.lines() {
             let instruction: Instruction;
@@ -172,58 +199,22 @@ fn main() {
                 // 0   1  2
                 if let Ok(i) = split[0].parse::<i16>() {
                     instruction = Instruction::Assignment {
-                        value: NumOrValue::Num(i),
+                        value: NumOrVar::Num(i),
                         var: split[2],
                     }
                 } else {
                     instruction = Instruction::Assignment {
-                        value: NumOrValue::Value(split[0]),
+                        value: NumOrVar::Var(split[0]),
                         var: split[2],
                     }
                 }
             }
 
-            let mut index = 0;
-
-            for sorted_instruction in &sorted_instructions {
-                let dependencies = instruction.get_dependencies();
-                let mut declared: Vec<&str> = Vec::new();
-                let curr_declared = sorted_instruction.get_declared();
-
-                index += 1;
-
-                if dependencies.contains(&curr_declared) {
-                    declared.push(curr_declared);
-                }
-                if declared.len() == dependencies.len() {
-                    break;
-                }
-            }
-
-            sorted_instructions.insert(index, instruction);
-        }
-        println!("{:#?}", sorted_instructions);
-        for instruction in sorted_instructions {
-            println!("{:?}", instruction);
-
-            match instruction {
-                Instruction::Assignment { var, value } => match value {
-                    NumOrValue::Value(s) => data.insert(var, data[s]),
-                    NumOrValue::Num(i) => data.insert(var, i),
-                },
-                Instruction::And { opnd0, opnd1, ans } => {
-                    data.insert(ans, data[opnd0] & data[opnd1])
-                }
-                Instruction::Or { opnd0, opnd1, ans } => {
-                    data.insert(ans, data[opnd0] | data[opnd1])
-                }
-                Instruction::Not { opnd0, ans } => data.insert(ans, !data[opnd0]),
-                Instruction::RShift { opnd0, shift, ans } => data.insert(ans, data[opnd0] >> shift),
-                Instruction::LShift { opnd0, shift, ans } => data.insert(ans, data[opnd0] << shift),
-            };
+            instructions.push(instruction);
         }
 
-        println!("{:?}", data);
+        let answer = Box::new(evaluate("a", &instructions, &mut cache));
+        println!("{}", answer);
     } else {
         println!("input.txt not found")
     }
