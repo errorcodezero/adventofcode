@@ -40,75 +40,98 @@ enum Instruction<'a> {
 }
 
 fn evaluate<'a>(
-    search: &str,
+    search: &'a str,
     instructions: &'a [Instruction],
     cache: &mut HashMap<&'a str, Option<i16>>,
 ) -> i16 {
     let mut ending_value = 0;
     for instruction in instructions {
         match instruction {
-            Instruction::Assignment { var, value } => match value {
-                NumOrVar::Var(s) => {
-                    cache.entry(var).or_insert(None);
-                    cache.entry(s).or_insert(None);
-                    if var == &search {
-                        let v1;
-                        if let Some(i) = cache[s] {
-                            v1 = i;
-                        } else {
-                            v1 = evaluate(var, instructions, cache)
+            Instruction::Assignment { var, value } => {
+                if var == &search {
+                    match value {
+                        NumOrVar::Var(s) => {
+                            let entry = cache.entry(s);
+                            entry.or_insert(None);
+
+                            let s = cache[s];
+
+                            if let Some(s) = s {
+                                ending_value = s;
+                            } else {
+                                ending_value = evaluate(search, instructions, cache);
+                            }
                         }
-                        ending_value = v1
+                        NumOrVar::Num(i) => {
+                            ending_value = *i;
+                        }
                     }
                 }
-                NumOrVar::Num(i) => {
-                    ending_value = *i;
-                    cache.insert(var, Some(*i));
-                }
-            },
+            }
+
             Instruction::And { opnd0, opnd1, ans } => {
                 if ans == &search {
-                    let v1;
-                    let v2;
-                    if let Some(i) = cache[opnd0] {
-                        v1 = i;
+                    let entry1 = cache.entry(opnd0);
+                    entry1.or_insert(None);
+
+                    let entry2 = cache.entry(opnd1);
+                    entry2.or_insert(None);
+
+                    let v1: i16;
+                    let v2: i16;
+
+                    if let Some(o0) = cache[opnd0] {
+                        v1 = o0;
                     } else {
-                        v1 = evaluate(opnd0, instructions, cache)
+                        v1 = evaluate(opnd0, instructions, cache);
                     }
 
-                    if let Some(i) = cache[opnd1] {
-                        v2 = i;
+                    if let Some(o1) = cache[opnd1] {
+                        v2 = o1;
                     } else {
-                        v2 = evaluate(opnd1, instructions, cache)
+                        v2 = evaluate(opnd1, instructions, cache);
                     }
+
                     ending_value = v1 & v2;
                 }
             }
             Instruction::Or { opnd0, opnd1, ans } => {
                 if ans == &search {
-                    let v1;
-                    let v2;
-                    if let Some(i) = cache[opnd0] {
-                        v1 = i;
+                    let entry1 = cache.entry(opnd0);
+                    entry1.or_insert(None);
+
+                    let entry2 = cache.entry(opnd1);
+                    entry2.or_insert(None);
+
+                    let v1: i16;
+                    let v2: i16;
+
+                    if let Some(o0) = cache[opnd0] {
+                        v1 = o0;
                     } else {
-                        v1 = evaluate(opnd0, instructions, cache)
+                        v1 = evaluate(opnd0, instructions, cache);
                     }
 
-                    if let Some(i) = cache[opnd1] {
-                        v2 = i;
+                    if let Some(o1) = cache[opnd1] {
+                        v2 = o1;
                     } else {
-                        v2 = evaluate(opnd1, instructions, cache)
+                        v2 = evaluate(opnd1, instructions, cache);
                     }
+
                     ending_value = v1 | v2;
                 }
             }
             Instruction::Not { opnd0, ans } => {
                 if ans == &search {
-                    let v1;
-                    if let Some(i) = cache[opnd0] {
-                        v1 = i;
+                    let entry1 = cache.entry(opnd0);
+                    entry1.or_insert(None);
+
+                    let v1: i16;
+
+                    if let Some(o0) = cache[opnd0] {
+                        v1 = o0;
                     } else {
-                        v1 = evaluate(opnd0, instructions, cache)
+                        v1 = evaluate(opnd0, instructions, cache);
                     }
 
                     ending_value = !v1;
@@ -116,11 +139,15 @@ fn evaluate<'a>(
             }
             Instruction::RShift { opnd0, shift, ans } => {
                 if ans == &search {
-                    let v1;
-                    if let Some(i) = cache[opnd0] {
-                        v1 = i;
+                    let entry1 = cache.entry(opnd0);
+                    entry1.or_insert(None);
+
+                    let v1: i16;
+
+                    if let Some(o0) = cache[opnd0] {
+                        v1 = o0;
                     } else {
-                        v1 = evaluate(opnd0, instructions, cache)
+                        v1 = evaluate(opnd0, instructions, cache);
                     }
 
                     ending_value = v1 >> shift;
@@ -128,11 +155,15 @@ fn evaluate<'a>(
             }
             Instruction::LShift { opnd0, shift, ans } => {
                 if ans == &search {
-                    let v1;
-                    if let Some(i) = cache[opnd0] {
-                        v1 = i;
+                    let entry1 = cache.entry(opnd0);
+                    entry1.or_insert(None);
+
+                    let v1: i16;
+
+                    if let Some(o0) = cache[opnd0] {
+                        v1 = o0;
                     } else {
-                        v1 = evaluate(opnd0, instructions, cache)
+                        v1 = evaluate(opnd0, instructions, cache);
                     }
 
                     ending_value = v1 << shift;
@@ -140,7 +171,7 @@ fn evaluate<'a>(
             }
         }
     }
-    println!("{}", ending_value);
+    cache.insert(search, Some(ending_value));
     ending_value
 }
 
@@ -213,7 +244,7 @@ fn main() {
             instructions.push(instruction);
         }
 
-        let answer = Box::new(evaluate("a", &instructions, &mut cache));
+        let answer = Box::new(evaluate("x", &instructions, &mut cache));
         println!("{}", answer);
     } else {
         println!("input.txt not found")
