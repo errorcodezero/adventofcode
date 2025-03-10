@@ -4,7 +4,10 @@ My solutions for advent of code. They aren't the fastest nor the best solution b
 
 ## 2015
 
-- [Day 1](/2015/1)
+- ## [Day 1:](/2015/1)
+- [Python](/2015/7/python)
+- [C++](/2015/7/cpp)
+
 - [Day 2](/2015/2)
 - [Day 3](/2015/3)
 - [Day 4](/2015/4)
