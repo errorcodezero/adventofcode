@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 
 #[derive(Clone, Copy, Debug)]
 enum NumOrVar<'a> {
-    Num(i16),
+    Num(u16),
     Var(&'a str),
 }
 
@@ -25,12 +25,12 @@ enum Instruction<'a> {
     },
     LShift {
         opnd0: &'a str,
-        shift: i16,
+        shift: u16,
         ans: &'a str,
     },
     RShift {
         opnd0: &'a str,
-        shift: i16,
+        shift: u16,
         ans: &'a str,
     },
     Assignment {
@@ -42,8 +42,8 @@ enum Instruction<'a> {
 fn evaluate<'a>(
     search: &'a str,
     instructions: &'a [Instruction],
-    cache: &mut HashMap<&'a str, Option<i16>>,
-) -> i16 {
+    cache: &mut HashMap<&'a str, Option<u16>>,
+) -> u16 {
     let mut ending_value = 0;
     for instruction in instructions {
         match instruction {
@@ -77,8 +77,8 @@ fn evaluate<'a>(
                     let entry2 = cache.entry(opnd1);
                     entry2.or_insert(None);
 
-                    let v1: i16;
-                    let v2: i16;
+                    let v1: u16;
+                    let v2: u16;
 
                     if let Some(o0) = cache[opnd0] {
                         v1 = o0;
@@ -103,8 +103,8 @@ fn evaluate<'a>(
                     let entry2 = cache.entry(opnd1);
                     entry2.or_insert(None);
 
-                    let v1: i16;
-                    let v2: i16;
+                    let v1: u16;
+                    let v2: u16;
 
                     if let Some(o0) = cache[opnd0] {
                         v1 = o0;
@@ -126,7 +126,7 @@ fn evaluate<'a>(
                     let entry1 = cache.entry(opnd0);
                     entry1.or_insert(None);
 
-                    let v1: i16;
+                    let v1: u16;
 
                     if let Some(o0) = cache[opnd0] {
                         v1 = o0;
@@ -142,7 +142,7 @@ fn evaluate<'a>(
                     let entry1 = cache.entry(opnd0);
                     entry1.or_insert(None);
 
-                    let v1: i16;
+                    let v1: u16;
 
                     if let Some(o0) = cache[opnd0] {
                         v1 = o0;
@@ -158,7 +158,7 @@ fn evaluate<'a>(
                     let entry1 = cache.entry(opnd0);
                     entry1.or_insert(None);
 
-                    let v1: i16;
+                    let v1: u16;
 
                     if let Some(o0) = cache[opnd0] {
                         v1 = o0;
@@ -177,10 +177,10 @@ fn evaluate<'a>(
 
 fn main() {
     let file = read_to_string("input.txt");
-    let mut cache: Box<HashMap<&str, Option<i16>>> = Box::default();
+    let mut cache: HashMap<&str, Option<u16>> = HashMap::new();
 
     if let Ok(file) = file {
-        let mut instructions: Box<Vec<Instruction>> = Box::default();
+        let mut instructions: Vec<Instruction> = Vec::new();
 
         for line in file.lines() {
             let instruction: Instruction;
@@ -228,7 +228,7 @@ fn main() {
             } else {
                 // 123 -> x
                 // 0   1  2
-                if let Ok(i) = split[0].parse::<i16>() {
+                if let Ok(i) = split[0].parse::<u16>() {
                     instruction = Instruction::Assignment {
                         value: NumOrVar::Num(i),
                         var: split[2],
@@ -244,7 +244,7 @@ fn main() {
             instructions.push(instruction);
         }
 
-        let answer = Box::new(evaluate("x", &instructions, &mut cache));
+        let answer = evaluate("a", &instructions, &mut cache);
         println!("{}", answer);
     } else {
         println!("input.txt not found")
