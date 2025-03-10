@@ -1,5 +1,3 @@
-FLAGS = -std=c++20 -Wall -O2
-
 build:
 	cargo b -r
 

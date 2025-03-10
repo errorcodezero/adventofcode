@@ -12,6 +12,7 @@ My solutions for advent of code. They aren't the fastest nor the best solution b
 - [Day 5](/2015/5)
 - [Day 6](/2015/6)
 - [Day 7](/2015/7)
+- [Day 8](/2015/8)
 
 ## 2023
 
