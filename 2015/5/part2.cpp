@@ -45,5 +45,8 @@ int main() {
   }
 
   std::cout << "Nice strings: " << nice << "\n";
+
+  file.close();
+
   return 0;
 }
