@@ -42,7 +42,7 @@ enum Instruction<'a> {
 fn evaluate<'a>(
     search: &'a str,
     instructions: &'a [Instruction],
-    cache: &mut HashMap<&'a str, Option<u16>>,
+    cache: &mut HashMap<&'a str, u16>,
 ) -> u16 {
     let mut ending_value = 0;
     for instruction in instructions {
@@ -51,43 +51,36 @@ fn evaluate<'a>(
                 if var == &search {
                     match value {
                         NumOrVar::Var(s) => {
-                            let entry = cache.entry(s);
-                            entry.or_insert(None);
-
-                            let s = cache[s];
-
-                            if let Some(s) = s {
-                                ending_value = s;
+                            if let Some(s) = cache.get(s) {
+                                ending_value = *s;
                             } else {
-                                ending_value = evaluate(search, instructions, cache);
+                                ending_value = evaluate(s, instructions, cache);
                             }
                         }
                         NumOrVar::Num(i) => {
-                            ending_value = *i;
+                            if cache.get(var).is_some() {
+                            } else {
+                                ending_value = *i;
+                            }
                         }
                     }
                 }
             }
-
             Instruction::And { opnd0, opnd1, ans } => {
                 if ans == &search {
-                    let entry1 = cache.entry(opnd0);
-                    entry1.or_insert(None);
-
-                    let entry2 = cache.entry(opnd1);
-                    entry2.or_insert(None);
-
                     let v1: u16;
                     let v2: u16;
 
-                    if let Some(o0) = cache[opnd0] {
-                        v1 = o0;
-                    } else {
+                    if let Some(o0) = cache.get(opnd0) {
+                        v1 = *o0;
+                    } else if *opnd0 != "1" {
                         v1 = evaluate(opnd0, instructions, cache);
+                    } else {
+                        v1 = 1;
                     }
 
-                    if let Some(o1) = cache[opnd1] {
-                        v2 = o1;
+                    if let Some(o1) = cache.get(opnd1) {
+                        v2 = *o1;
                     } else {
                         v2 = evaluate(opnd1, instructions, cache);
                     }
@@ -97,23 +90,17 @@ fn evaluate<'a>(
             }
             Instruction::Or { opnd0, opnd1, ans } => {
                 if ans == &search {
-                    let entry1 = cache.entry(opnd0);
-                    entry1.or_insert(None);
-
-                    let entry2 = cache.entry(opnd1);
-                    entry2.or_insert(None);
-
                     let v1: u16;
                     let v2: u16;
 
-                    if let Some(o0) = cache[opnd0] {
-                        v1 = o0;
+                    if let Some(o0) = cache.get(opnd0) {
+                        v1 = *o0;
                     } else {
                         v1 = evaluate(opnd0, instructions, cache);
                     }
 
-                    if let Some(o1) = cache[opnd1] {
-                        v2 = o1;
+                    if let Some(o1) = cache.get(opnd1) {
+                        v2 = *o1;
                     } else {
                         v2 = evaluate(opnd1, instructions, cache);
                     }
@@ -123,13 +110,10 @@ fn evaluate<'a>(
             }
             Instruction::Not { opnd0, ans } => {
                 if ans == &search {
-                    let entry1 = cache.entry(opnd0);
-                    entry1.or_insert(None);
-
                     let v1: u16;
 
-                    if let Some(o0) = cache[opnd0] {
-                        v1 = o0;
+                    if let Some(o0) = cache.get(opnd0) {
+                        v1 = *o0;
                     } else {
                         v1 = evaluate(opnd0, instructions, cache);
                     }
@@ -139,13 +123,10 @@ fn evaluate<'a>(
             }
             Instruction::RShift { opnd0, shift, ans } => {
                 if ans == &search {
-                    let entry1 = cache.entry(opnd0);
-                    entry1.or_insert(None);
-
                     let v1: u16;
 
-                    if let Some(o0) = cache[opnd0] {
-                        v1 = o0;
+                    if let Some(o0) = cache.get(opnd0) {
+                        v1 = *o0;
                     } else {
                         v1 = evaluate(opnd0, instructions, cache);
                     }
@@ -155,13 +136,10 @@ fn evaluate<'a>(
             }
             Instruction::LShift { opnd0, shift, ans } => {
                 if ans == &search {
-                    let entry1 = cache.entry(opnd0);
-                    entry1.or_insert(None);
-
                     let v1: u16;
 
-                    if let Some(o0) = cache[opnd0] {
-                        v1 = o0;
+                    if let Some(o0) = cache.get(opnd0) {
+                        v1 = *o0;
                     } else {
                         v1 = evaluate(opnd0, instructions, cache);
                     }
@@ -171,13 +149,13 @@ fn evaluate<'a>(
             }
         }
     }
-    cache.insert(search, Some(ending_value));
+    cache.insert(search, ending_value);
     ending_value
 }
 
 fn main() {
     let file = read_to_string("input.txt");
-    let mut cache: HashMap<&str, Option<u16>> = HashMap::new();
+    let mut cache: HashMap<&str, u16> = HashMap::new();
 
     if let Ok(file) = file {
         let mut instructions: Vec<Instruction> = Vec::new();
@@ -245,7 +223,11 @@ fn main() {
         }
 
         let answer = evaluate("a", &instructions, &mut cache);
-        println!("{}", answer);
+        println!("Part 1 Answer: {}", answer);
+        cache.clear();
+        cache.insert("b", answer);
+        let answer = evaluate("a", &instructions, &mut cache);
+        println!("Part 2 Answer: {}", answer);
     } else {
         println!("input.txt not found")
     }
