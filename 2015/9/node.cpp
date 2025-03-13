@@ -1,5 +1,6 @@
 #include "node.h"
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 std::string Node::toString() {
@@ -11,7 +12,7 @@ std::string Node::toString() {
   string += this->name;
   string += "\", connections: [";
   for (Connection connection : connections) {
-    string += "Connection { start:  ";
+    string += "{ start:  ";
     string += connection.start.get().name;
     string += ", end: ";
     string += connection.end.get().name;
@@ -24,8 +25,3 @@ std::string Node::toString() {
 
   return string;
 }
-
-// Node traverse(Node &nodes) {
-//   std::vector<Node *>
-//   Node start = nodes[0];
-// }

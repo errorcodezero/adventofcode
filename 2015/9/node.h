@@ -20,3 +20,6 @@ struct Node {
   // Assignment operator
   Node &operator=(Node &other) { return other; };
 };
+
+std::vector<std::vector<Node>>
+getPermutations(std::unordered_map<std::string, Node> data);
