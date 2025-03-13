@@ -1,6 +1,6 @@
 FLAGS = -std=c++23 -Wall -O2
 
-build/part1.o: part1.cpp utils.cpp node.cpp
+build/part1.o: part1.cpp utils.cpp node.cpp node.h utils.h
 	mkdir -p build
 	g++ -c part1.cpp -o ./build/part1.obj $(FLAGS)
 	g++ -c node.cpp -o ./build/node.obj $(FLAGS)
@@ -10,7 +10,7 @@ build/part1.o: part1.cpp utils.cpp node.cpp
 run-part1: build/part1.o
 	./build/part1.o
 
-build/part2.o: part2.cpp utils.cpp node.cpp
+build/part2.o: part2.cpp utils.cpp node.cpp node.h utils.h
 	mkdir -p build
 	g++ -c part2.cpp -o ./build/part2.obj $(FLAGS)
 	g++ -c node.cpp -o ./build/node.obj $(FLAGS)
