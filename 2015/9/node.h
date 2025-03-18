@@ -7,19 +7,17 @@
 struct Node;
 
 struct Connection {
-  std::reference_wrapper<Node> start;
-  std::reference_wrapper<Node> end;
+  std::shared_ptr<Node> start;
+  std::shared_ptr<Node> end;
   int distance = 0;
 };
 
 struct Node {
-  std::vector<std::reference_wrapper<Connection>> connections =
-      std::vector<std::reference_wrapper<Connection>>();
+  std::vector<std::shared_ptr<Connection>> connections =
+      std::vector<std::shared_ptr<Connection>>();
   std::string name = "";
   std::string toString();
-  // Assignment operator
-  Node &operator=(Node &other) { return other; };
 };
 
-std::vector<std::vector<Node>>
-getPermutations(std::unordered_map<std::string, Node> data);
+int getShortestPath(std::shared_ptr<Node> start);
+int factorial(int number);

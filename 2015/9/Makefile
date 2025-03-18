@@ -1,4 +1,4 @@
-FLAGS = -std=c++23 -Wall -O2
+FLAGS = -std=c++23 -Wall -g
 
 build/part1.o: part1.cpp utils.cpp node.cpp node.h utils.h
 	mkdir -p build
